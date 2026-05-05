@@ -2,8 +2,9 @@
 // Démarrer la session
 session_start();
 
-// Inclure la connexion à la base de données
+// Inclure les configurations et fonctions
 require_once 'php/config/database.php';
+require_once 'includes/functions.php';
 
 // Récupérer les services depuis la base de données
 $services = [];
@@ -73,7 +74,7 @@ try {
                 <li class="nav-item"><a class="nav-link" href="#galerie">Galerie</a></li>
                 <li class="nav-item"><a class="nav-link" href="#a-propos">À propos</a></li>
                 <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                <?php if(isset($_SESSION['user_id'])): ?>
+                <?php if(is_logged_in()): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['user_nom'] ?? 'Mon compte'); ?>

@@ -265,6 +265,7 @@ CREATE TABLE `utilisateurs` (
   `mot_de_passe` varchar(255) NOT NULL,
   `telephone` varchar(20) DEFAULT NULL,
   `adresse` text DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
   `role` enum('client','employe','admin') DEFAULT 'client',
   `statut` enum('actif','inactif','suspendu') DEFAULT 'actif',
   `date_inscription` datetime DEFAULT current_timestamp(),

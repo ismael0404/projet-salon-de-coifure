@@ -1,17 +1,11 @@
 <?php
-// Démarrer la session
-session_start();
+require_once dirname(__DIR__) . '/includes/functions.php';
 
 // Rediriger si l'utilisateur est déjà connecté
-if(isset($_SESSION['user_id'])) {
-    if($_SESSION['user_role'] == 'client') {
-        header('Location: client/dashboard_client.php');
-    } elseif($_SESSION['user_role'] == 'employe') {
-        header('Location: employe/dashboard_employe.php');
-    } elseif($_SESSION['user_role'] == 'admin') {
-        header('Location: admin/dashboard_admin.php');
-    }
-    exit();
+if(is_logged_in()) {
+    $role = $_SESSION['user_role'];
+    $path = ($role === 'client') ? 'client/dashboard.php' : (($role === 'employe') ? 'employe/dashboard.php' : 'admin/dashboard.php');
+    redirect($path);
 }
 ?>
 <!DOCTYPE html>
@@ -252,8 +246,18 @@ if(isset($_SESSION['user_id'])) {
                         <?php
                         $error = isset($_GET['error']) ? $_GET['error'] : '';
                         $success = isset($_GET['success']) ? $_GET['success'] : '';
+                        $flash_error = get_flash_message('error');
+                        $flash_success = get_flash_message('success');
                         
-                        if($error == 'empty_fields'): ?>
+                        if($flash_error): ?>
+                            <div class="alert-message error show">
+                                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($flash_error); ?>
+                            </div>
+                        <?php elseif($flash_success): ?>
+                            <div class="alert-message success show">
+                                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($flash_success); ?>
+                            </div>
+                        <?php elseif($error == 'empty_fields'): ?>
                             <div class="alert-message error show">
                                 <i class="fas fa-exclamation-circle"></i> Veuillez remplir tous les champs.
                             </div>
@@ -288,7 +292,8 @@ if(isset($_SESSION['user_id'])) {
                         <?php endif; ?>
                         
                         <!-- Formulaire de connexion -->
-                        <form id="loginForm" method="POST" action="../php/auth/connexion.php">
+                        <form id="loginForm" method="POST" action="../php/controllers/auth_controller.php?action=login">
+                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                             <div class="form-group">
                                 <label><i class="fas fa-envelope"></i> Email</label>
                                 <div class="input-icon">
@@ -318,7 +323,7 @@ if(isset($_SESSION['user_id'])) {
                             </button>
                             
                             <div class="forgot-password">
-                                <a href="mot_de_passe_oublie.php">
+                                <a href="#" onclick="alert('Fonctionnalité en cours de développement'); return false;">
                                     <i class="fas fa-key"></i> Mot de passe oublié ?
                                 </a>
                             </div>

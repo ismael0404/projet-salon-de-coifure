@@ -1,123 +1,18 @@
 <?php
-// Démarrer la session
-session_start();
+require_once dirname(__DIR__) . '/includes/functions.php';
 
 // Rediriger si l'utilisateur est déjà connecté
-if(isset($_SESSION['user_id'])) {
-    if($_SESSION['user_role'] == 'client') {
-        header('Location: client/dashboard_client.php');
-    } elseif($_SESSION['user_role'] == 'employe') {
-        header('Location: employe/dashboard_employe.php');
-    } elseif($_SESSION['user_role'] == 'admin') {
-        header('Location: admin/dashboard_admin.php');
-    }
-    exit();
+if(is_logged_in()) {
+    $role = $_SESSION['user_role'];
+    $path = ($role === 'client') ? 'client/dashboard.php' : (($role === 'employe') ? 'employe/dashboard.php' : 'admin/dashboard.php');
+    redirect($path);
 }
 
-// Initialisation des variables
-$error = '';
-$success = '';
-$nom = '';
-$prenom = '';
-$email = '';
-$telephone = '';
-
-// Traitement du formulaire d'inscription
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
-    // Inclure la connexion à la base de données
-    require_once dirname(__DIR__) . '/php/config/database.php';
-    
-    // Récupérer et nettoyer les données
-    $nom = trim($_POST['nom'] ?? '');
-    $prenom = trim($_POST['prenom'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $telephone = trim($_POST['telephone'] ?? '');
-    $mot_de_passe = $_POST['mot_de_passe'] ?? '';
-    $confirme_mot_de_passe = $_POST['confirme_mot_de_passe'] ?? '';
-    $terms = isset($_POST['terms']) ? true : false;
-    
-    // ========== VALIDATION DES CHAMPS ==========
-    
-    // Vérifier les champs obligatoires
-    if (empty($nom) || empty($prenom) || empty($email) || empty($mot_de_passe)) {
-        $error = 'empty_fields';
-    }
-    // Vérifier l'email
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'invalid_email';
-    }
-    // Vérifier la longueur du mot de passe
-    elseif (strlen($mot_de_passe) < 6) {
-        $error = 'weak_password';
-    }
-    // Vérifier la correspondance des mots de passe
-    elseif ($mot_de_passe !== $confirme_mot_de_passe) {
-        $error = 'password_mismatch';
-    }
-    // Vérifier l'acceptation des conditions
-    elseif (!$terms) {
-        $error = 'terms_required';
-    }
-    // Vérifier le téléphone (optionnel)
-    elseif (!empty($telephone) && !preg_match("/^[0-9+\s\-]{8,20}$/", $telephone)) {
-        $error = 'phone_invalid';
-    }
-    else {
-        try {
-            // Vérifier si l'email existe déjà
-            $checkStmt = $pdo->prepare("SELECT id_utilisateur FROM utilisateurs WHERE email = :email");
-            $checkStmt->execute(['email' => $email]);
-            
-            if ($checkStmt->fetch()) {
-                $error = 'email_exists';
-            } else {
-                // Hasher le mot de passe
-                $hashed_password = password_hash($mot_de_passe, PASSWORD_DEFAULT);
-                
-                // Démarrer une transaction
-                $pdo->beginTransaction();
-                
-                // Insérer l'utilisateur
-                $insertStmt = $pdo->prepare("
-                    INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, telephone, role, statut) 
-                    VALUES (:nom, :prenom, :email, :mot_de_passe, :telephone, 'client', 'actif')
-                ");
-                
-                $insertStmt->execute([
-                    'nom' => $nom,
-                    'prenom' => $prenom,
-                    'email' => $email,
-                    'mot_de_passe' => $hashed_password,
-                    'telephone' => !empty($telephone) ? $telephone : null
-                ]);
-                
-                // Récupérer l'ID du nouvel utilisateur
-                $user_id = $pdo->lastInsertId();
-                
-                // Insérer dans la table clientes
-                $clientStmt = $pdo->prepare("
-                    INSERT INTO clientes (id_utilisateur, nombre_rendezvous, niveau_fidelite, reduction) 
-                    VALUES (:user_id, 0, 0, 0)
-                ");
-                $clientStmt->execute(['user_id' => $user_id]);
-                
-                // Valider la transaction
-                $pdo->commit();
-                
-                // REDIRECTION CORRECTE VERS pages/connexion.php
-                header('Location: pages/connexion.php?success=inscription_ok');
-                exit();
-            }
-        } catch(PDOException $e) {
-            // Annuler la transaction en cas d'erreur
-            if($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            $error = 'system_error';
-        }
-    }
-}
+// Variables pour réafficher les valeurs si erreur (peuvent provenir d'une ancienne session)
+$nom = $_GET['nom'] ?? '';
+$prenom = $_GET['prenom'] ?? '';
+$email = $_GET['email'] ?? '';
+$telephone = $_GET['telephone'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -346,7 +241,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="register-body">
                         
-                        <?php if($error == 'empty_fields'): ?>
+                        <?php 
+                        $error = $_GET['error'] ?? '';
+                        $flash_error = get_flash_message('error');
+                        if($flash_error): ?>
+                            <div class="alert-message error"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($flash_error); ?></div>
+                        <?php elseif($error == 'empty_fields'): ?>
                             <div class="alert-message error"><i class="fas fa-exclamation-circle"></i> Veuillez remplir tous les champs obligatoires.</div>
                         <?php elseif($error == 'invalid_email'): ?>
                             <div class="alert-message error"><i class="fas fa-exclamation-circle"></i> Veuillez saisir un email valide.</div>
@@ -364,7 +264,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="alert-message error"><i class="fas fa-exclamation-circle"></i> Une erreur s'est produite. Veuillez réessayer.</div>
                         <?php endif; ?>
                         
-                        <form id="registerForm" method="POST" action="">
+                        <form id="registerForm" method="POST" action="../php/controllers/auth_controller.php?action=register">
+                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
