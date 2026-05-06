@@ -13,11 +13,11 @@ require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__, 2) . '/includes/functions.php';
 
 // Redirection si déjà connecté
-if (is_logged_in()) {
+// Redirection si déjà connecté (sauf si on veut se déconnecter)
+$action = $_GET['action'] ?? '';
+if (is_logged_in() && $action !== 'logout') {
     redirect('/coiffure_salon/pages/' . $_SESSION['user_role'] . '/dashboard.php');
 }
-
-$action = $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -185,6 +185,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 } else {
-    // Si la méthode n'est pas POST
+    // ==== TRAITEMENT DES ACTIONS GET (comme logout) ====
+    if ($action === 'logout') {
+        session_unset();
+        session_destroy();
+        session_start();
+        $_SESSION['flash_success'] = "Vous avez été déconnecté avec succès.";
+        redirect('/coiffure_salon/pages/connexion.php');
+    }
+    
+    // Si aucune action GET n'est prévue, retour à l'accueil
     redirect('/coiffure_salon/index.php');
 }
