@@ -101,4 +101,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/coiffure_salon/pages/client/prendre_rdv.php');
         }
     }
+    // ==== ANNULATION D'UN RDV PAR LA CLIENTE ====
+    elseif ($action === 'cancel') {
+        require_role('client');
+        $id_rdv = (int)$_POST['id_rdv'];
+
+        try {
+            // Vérifier que le RDV appartient bien à la cliente
+            $stmt = $pdo->prepare("
+                SELECT r.id_rdv, r.date_rdv, r.heure_rdv, c.id_utilisateur as id_client_user, e.id_utilisateur as id_emp_user 
+                FROM rendez_vous r 
+                JOIN clientes c ON r.id_cliente = c.id_cliente 
+                JOIN employes e ON r.id_employe = e.id_employe 
+                WHERE r.id_rdv = ? AND c.id_utilisateur = ?
+            ");
+            $stmt->execute([$id_rdv, $_SESSION['user_id']]);
+            $rdv = $stmt->fetch();
+
+            if ($rdv) {
+                $stmt = $pdo->prepare("UPDATE rendez_vous SET statut = 'annule' WHERE id_rdv = ?");
+                $stmt->execute([$id_rdv]);
+
+                $date_f = date('d/m', strtotime($rdv['date_rdv']));
+                $msg = "RDV Annulé : La cliente " . $_SESSION['user_nom'] . " a annulé son RDV du $date_f.";
+
+                // Notifier l'employée
+                create_notification($rdv['id_emp_user'], $msg, 'danger');
+
+                // Notifier les admins
+                $stmt_admins = $pdo->query("SELECT id_utilisateur FROM utilisateurs WHERE role = 'admin' AND statut = 'actif'");
+                foreach ($stmt_admins->fetchAll(PDO::FETCH_COLUMN) as $admin_id) {
+                    create_notification($admin_id, $msg, 'danger');
+                }
+
+                $_SESSION['flash_success'] = "Rendez-vous annulé avec succès.";
+            }
+        } catch (PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de l'annulation.";
+        }
+        redirect('/coiffure_salon/pages/client/mes_rdv.php');
+    }
+
+    // ==== MODIFICATION D'UN RDV PAR LA CLIENTE ====
+    elseif ($action === 'update') {
+        require_role('client');
+        $id_rdv = (int)$_POST['id_rdv'];
+        $date_rdv = $_POST['date_rdv'];
+        $heure_rdv = $_POST['heure_rdv'];
+
+        try {
+            // Vérifier que le RDV appartient bien à la cliente
+            $stmt = $pdo->prepare("
+                SELECT r.id_rdv, c.id_utilisateur as id_client_user, e.id_utilisateur as id_emp_user 
+                FROM rendez_vous r 
+                JOIN clientes c ON r.id_cliente = c.id_cliente 
+                JOIN employes e ON r.id_employe = e.id_employe 
+                WHERE r.id_rdv = ? AND c.id_utilisateur = ?
+            ");
+            $stmt->execute([$id_rdv, $_SESSION['user_id']]);
+            $rdv = $stmt->fetch();
+
+            if ($rdv) {
+                $stmt = $pdo->prepare("UPDATE rendez_vous SET date_rdv = ?, heure_rdv = ?, statut = 'en_attente' WHERE id_rdv = ?");
+                $stmt->execute([$date_rdv, $heure_rdv, $id_rdv]);
+
+                $date_f = date('d/m', strtotime($date_rdv));
+                $msg = "RDV Modifié : " . $_SESSION['user_nom'] . " a déplacé son RDV au $date_f à " . date('H:i', strtotime($heure_rdv)) . ".";
+
+                // Notifier l'employée
+                create_notification($rdv['id_emp_user'], $msg, 'warning');
+
+                // Notifier les admins
+                $stmt_admins = $pdo->query("SELECT id_utilisateur FROM utilisateurs WHERE role = 'admin' AND statut = 'actif'");
+                foreach ($stmt_admins->fetchAll(PDO::FETCH_COLUMN) as $admin_id) {
+                    create_notification($admin_id, $msg, 'warning');
+                }
+
+                $_SESSION['flash_success'] = "Rendez-vous modifié. Il est de nouveau en attente de confirmation.";
+            }
+        } catch (PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de la modification.";
+        }
+        redirect('/coiffure_salon/pages/client/mes_rdv.php');
+    }
 }

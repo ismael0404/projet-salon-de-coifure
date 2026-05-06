@@ -99,7 +99,8 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                                     <button class="btn btn-sm btn-outline-warning" title="Laisser un avis" onclick="Swal.fire('Info', 'Système d\'avis en cours de développement', 'info')"><i class="fas fa-star"></i></button>
                                     <a href="facture.php?id=<?php echo $rdv['id_rdv']; ?>" target="_blank" class="btn btn-sm btn-outline-danger" title="Télécharger la facture"><i class="fas fa-file-pdf"></i></a>
                                 <?php elseif($rdv['statut'] == 'en_attente' || $rdv['statut'] == 'confirme'): ?>
-                                    <button class="btn btn-sm btn-outline-danger" title="Annuler le RDV"><i class="fas fa-times"></i></button>
+                                    <button class="btn btn-sm btn-outline-primary" title="Modifier le RDV" onclick="modifierRDV(<?php echo $rdv['id_rdv']; ?>, '<?php echo $rdv['date_rdv']; ?>', '<?php echo $rdv['heure_rdv']; ?>')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Annuler le RDV" onclick="annulerRDV(<?php echo $rdv['id_rdv']; ?>)"><i class="fas fa-times"></i></button>
                                 <?php else: ?>
                                     <span class="text-muted">-</span>
                                 <?php endif; ?>
@@ -109,6 +110,66 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                     </tbody>
                 </table>
             </div>
+            
+            <script>
+            function modifierRDV(id, date, heure) {
+                Swal.fire({
+                    title: 'Modifier mon rendez-vous',
+                    html: `
+                        <label class="form-label mt-2">Nouvelle date</label>
+                        <input type="date" id="new_date" class="swal2-input" value="${date}" min="<?php echo date('Y-m-d'); ?>">
+                        <label class="form-label mt-2">Nouvel horaire</label>
+                        <input type="time" id="new_time" class="swal2-input" value="${heure.substring(0,5)}">
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Enregistrer les modifications',
+                    confirmButtonColor: '#d4a373',
+                    preConfirm: () => {
+                        return {
+                            date: document.getElementById('new_date').value,
+                            time: document.getElementById('new_time').value
+                        }
+                    }
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '../../php/controllers/rdv_controller.php?action=update';
+                        form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                            <input type="hidden" name="id_rdv" value="${id}">
+                            <input type="hidden" name="date_rdv" value="${res.value.date}">
+                            <input type="hidden" name="heure_rdv" value="${res.value.time}">
+                        `;
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
+
+            function annulerRDV(id) {
+                Swal.fire({
+                    title: 'Annuler ce rendez-vous ?',
+                    text: "Cette action informera l'administration et l'employée.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Oui, annuler'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '../../php/controllers/rdv_controller.php?action=cancel';
+                        form.innerHTML = `
+                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                            <input type="hidden" name="id_rdv" value="${id}">
+                        `;
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
+            </script>
         <?php endif; ?>
     </div>
 </div>

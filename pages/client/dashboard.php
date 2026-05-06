@@ -23,7 +23,7 @@ $prochain_rdv = null;
 if($id_cliente > 0) {
     try {
         $stmt = $pdo->prepare("
-            SELECT r.date_rdv, r.heure_rdv, r.statut, s.nom_service, s.duree, e_u.nom as emp_nom, e_u.prenom as emp_prenom 
+            SELECT r.id_rdv, r.date_rdv, r.heure_rdv, r.statut, s.nom_service, s.duree, e_u.nom as emp_nom, e_u.prenom as emp_prenom 
             FROM rendez_vous r 
             JOIN services s ON r.id_service = s.id_service 
             JOIN employes e ON r.id_employe = e.id_employe
@@ -69,10 +69,82 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                                 <span class="badge bg-<?php echo $prochain_rdv['statut'] == 'confirme' ? 'success' : 'warning text-dark'; ?> fs-6">
                                     <?php echo ucfirst($prochain_rdv['statut']); ?>
                                 </span>
-                                <button class="btn btn-outline-light btn-sm">Gérer</button>
+                                <button class="btn btn-outline-light btn-sm" onclick="gererRDV(<?php echo $prochain_rdv['id_rdv']; ?>, '<?php echo $prochain_rdv['date_rdv']; ?>', '<?php echo $prochain_rdv['heure_rdv']; ?>')">Gérer</button>
                             </div>
                         </div>
                     </div>
+
+                    <script>
+                    function gererRDV(id, date, heure) {
+                        Swal.fire({
+                            title: 'Gérer mon rendez-vous',
+                            text: "Que souhaitez-vous faire ?",
+                            icon: 'question',
+                            showCancelButton: true,
+                            showDenyButton: true,
+                            confirmButtonText: '<i class="fas fa-edit"></i> Modifier',
+                            denyButtonText: '<i class="fas fa-times"></i> Annuler',
+                            cancelButtonText: 'Retour',
+                            confirmButtonColor: '#d4a373',
+                            denyButtonColor: '#dc3545',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Modifier
+                                Swal.fire({
+                                    title: 'Nouvel horaire',
+                                    html: `
+                                        <input type="date" id="new_date" class="swal2-input" value="${date}" min="<?php echo date('Y-m-d'); ?>">
+                                        <input type="time" id="new_time" class="swal2-input" value="${heure.substring(0,5)}">
+                                    `,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Enregistrer',
+                                    preConfirm: () => {
+                                        return {
+                                            date: document.getElementById('new_date').value,
+                                            time: document.getElementById('new_time').value
+                                        }
+                                    }
+                                }).then((res) => {
+                                    if (res.isConfirmed) {
+                                        const form = document.createElement('form');
+                                        form.method = 'POST';
+                                        form.action = '../../php/controllers/rdv_controller.php?action=update';
+                                        form.innerHTML = `
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="id_rdv" value="${id}">
+                                            <input type="hidden" name="date_rdv" value="${res.value.date}">
+                                            <input type="hidden" name="heure_rdv" value="${res.value.time}">
+                                        `;
+                                        document.body.appendChild(form);
+                                        form.submit();
+                                    }
+                                });
+                            } else if (result.isDenied) {
+                                // Annuler
+                                Swal.fire({
+                                    title: 'Êtes-vous sûr ?',
+                                    text: "Cette action est irréversible !",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#dc3545',
+                                    confirmButtonText: 'Oui, annuler !'
+                                }).then((res) => {
+                                    if (res.isConfirmed) {
+                                        const form = document.createElement('form');
+                                        form.method = 'POST';
+                                        form.action = '../../php/controllers/rdv_controller.php?action=cancel';
+                                        form.innerHTML = `
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="id_rdv" value="${id}">
+                                        `;
+                                        document.body.appendChild(form);
+                                        form.submit();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    </script>
                 <?php else: ?>
                     <div class="text-center py-4">
                         <i class="far fa-calendar-times fa-3x text-muted mb-3"></i>
