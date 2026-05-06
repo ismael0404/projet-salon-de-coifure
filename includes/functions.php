@@ -93,4 +93,20 @@ function get_flash_message($type) {
     }
     return '';
 }
+/**
+ * Crée une notification pour un utilisateur
+ * @param int $id_utilisateur ID de l'utilisateur destinataire
+ * @param string $message Message de la notification
+ * @param string $type Type de notification (success, info, warning, danger)
+ * @return bool True si réussi
+ */
+function create_notification($id_utilisateur, $message, $type = 'info') {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("INSERT INTO notifications (id_utilisateur, message, type) VALUES (?, ?, ?)");
+        return $stmt->execute([$id_utilisateur, $message, $type]);
+    } catch (PDOException $e) {
+        return false;
+    }
+}
 ?>

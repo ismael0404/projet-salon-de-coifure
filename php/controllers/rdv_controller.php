@@ -77,6 +77,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("INSERT INTO log_activites (id_utilisateur, action, description) VALUES (:id, 'Nouveau RDV', 'Réservation effectuée en ligne')");
             $stmt->execute(['id' => $_SESSION['user_id']]);
             
+            // 6. Notifications en temps réel
+            // Notification pour l'employée concernée
+            $stmt_emp = $pdo->prepare("SELECT id_utilisateur FROM employes WHERE id_employe = ?");
+            $stmt_emp->execute([$id_employe]);
+            $emp_user_id = $stmt_emp->fetchColumn();
+            if ($emp_user_id) {
+                create_notification($emp_user_id, "Nouveau RDV : Vous avez une réservation pour le " . date('d/m', strtotime($date_rdv)) . " à " . date('H:i', strtotime($heure_rdv)), 'info');
+            }
+
+            // Notifications pour tous les administrateurs
+            $stmt_admins = $pdo->query("SELECT id_utilisateur FROM utilisateurs WHERE role = 'admin' AND statut = 'actif'");
+            $admins = $stmt_admins->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($admins as $admin_id) {
+                create_notification($admin_id, "Nouveau RDV de " . $_SESSION['user_nom'] . " pour le " . date('d/m', strtotime($date_rdv)) . " à " . date('H:i', strtotime($heure_rdv)), 'info');
+            }
+            
             $_SESSION['flash_success'] = "Votre rendez-vous a été enregistré avec succès ! Il est actuellement en attente de confirmation.";
             redirect('/coiffure_salon/pages/client/mes_rdv.php');
             

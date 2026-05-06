@@ -30,6 +30,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
             }
             
+            
+            // Notifications lors de la confirmation
+            if ($nouveau_statut === 'confirme') {
+                $stmt = $pdo->prepare("SELECT r.date_rdv, r.heure_rdv, c.id_utilisateur as id_client_user, e.id_utilisateur as id_emp_user 
+                                     FROM rendez_vous r 
+                                     JOIN clientes c ON r.id_cliente = c.id_cliente 
+                                     JOIN employes e ON r.id_employe = e.id_employe 
+                                     WHERE r.id_rdv = ?");
+                $stmt->execute([$id_rdv]);
+                $info = $stmt->fetch();
+                
+                if ($info) {
+                    $date_f = date('d/m', strtotime($info['date_rdv']));
+                    $heure_f = date('H:i', strtotime($info['heure_rdv']));
+                    
+                    // Notifier la cliente
+                    create_notification($info['id_client_user'], "Bonne nouvelle ! Votre RDV du $date_f à $heure_f est confirmé.", 'success');
+                    
+                    // Notifier l'employée
+                    create_notification($info['id_emp_user'], "Confirmation : Le RDV du $date_f à $heure_f est confirmé.", 'info');
+                }
+            }
+            
             $pdo->commit();
             $_SESSION['flash_success'] = "Statut mis à jour avec succès.";
         } catch(PDOException $e) {
