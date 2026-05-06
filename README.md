@@ -54,3 +54,13 @@ Ce dossier contient la logique "côté serveur" et la configuration globale de l
 5. Ouvrez le fichier **`php/config/database.php`** et vérifiez que les identifiants de base de données correspondent bien à la configuration de votre serveur local (par défaut, l'utilisateur est souvent `root` avec un mot de passe vide).
 6. Démarrez vos services Apache et MySQL.
 7. Accédez au projet depuis votre navigateur en visitant l'adresse : `http://localhost/coiffure_salon/`.
+
+## Comptes de test par défaut
+
+Pour tester les différentes interfaces, vous pouvez utiliser les comptes suivants :
+
+| Rôle | Email | Mot de passe |
+| :--- | :--- | :--- |
+| **Administrateur** | `admin@tyastylex.com` | `admin123` |
+| **Employée** | `amine@tyastylex.com` | `amine123` |
+| **Cliente** | `fatou@email.com` | `fatou123` |

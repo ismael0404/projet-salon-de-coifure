@@ -98,7 +98,7 @@ include dirname(__DIR__, 2) . '/includes/header.php';
         
         <!-- Récapitulatif -->
         <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="card p-4 shadow-sm border-0 sticky-top" style="top: 20px;">
+            <div class="card p-4 shadow-sm border-0 sticky-top" style="top: 100px;">
                 <h5 class="playfair mb-4">Récapitulatif</h5>
                 <ul class="list-group list-group-flush mb-4">
                     <li class="list-group-item d-flex justify-content-between px-0">
