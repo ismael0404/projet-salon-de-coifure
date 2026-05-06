@@ -219,9 +219,14 @@ if (session_status() === PHP_SESSION_NONE) {
         <?php endif; ?>
 
         <?php
-        // Notification pour les nouveaux messages non lus lors de la connexion
-        if (isset($unread_msg) && $unread_msg > 0 && !isset($_SESSION['msg_notified'])): 
-            $_SESSION['msg_notified'] = true;
+        // Notification pour les nouveaux messages et notifications non lus lors de la connexion
+        $stmt_notif = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE id_utilisateur = ? AND is_read = 0");
+        $stmt_notif->execute([$_SESSION['user_id']]);
+        $unread_notifications = $stmt_notif->fetchColumn();
+
+        if ((($unread_msg ?? 0) > 0 || $unread_notifications > 0) && !isset($_SESSION['login_notified'])): 
+            $_SESSION['login_notified'] = true;
+            $total_alerts = ($unread_msg ?? 0) + $unread_notifications;
         ?>
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
@@ -229,13 +234,30 @@ if (session_status() === PHP_SESSION_NONE) {
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
-                        timer: 3000,
+                        timer: 4000,
                         timerProgressBar: true,
                     });
 
+                    let message = 'Vous avez <?php echo $total_alerts; ?> nouvelle(s) alerte(s) :';
+                    <?php if (($unread_msg ?? 0) > 0): ?>
+                        message += '\n- <?php echo $unread_msg; ?> message(s)';
+                    <?php endif; ?>
+                    <?php if ($unread_notifications > 0): ?>
+                        message += '\n- <?php echo $unread_notifications; ?> notification(s)';
+                    <?php endif; ?>
+
                     Toast.fire({
                         icon: 'info',
-                        title: 'Vous avez <?php echo $unread_msg; ?> message(s) non lu(s)'
+                        title: 'Résumé de votre compte',
+                        html: `<div class="text-start small">
+                                <strong>Vous avez <?php echo $total_alerts; ?> nouveauté(s) :</strong><br>
+                                <?php if (($unread_msg ?? 0) > 0): ?>
+                                    <i class="fas fa-envelope me-2"></i> <?php echo $unread_msg; ?> nouveau(x) message(s)<br>
+                                <?php endif; ?>
+                                <?php if ($unread_notifications > 0): ?>
+                                    <i class="fas fa-bell me-2"></i> <?php echo $unread_notifications; ?> nouvelle(s) notification(s)
+                                <?php endif; ?>
+                               </div>`
                     });
                 });
             </script>
