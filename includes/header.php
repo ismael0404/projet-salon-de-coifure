@@ -33,19 +33,33 @@ if (session_status() === PHP_SESSION_NONE) {
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f4f7f6;
+            padding-top: 0 !important;
+            height: 100vh;
+            overflow: hidden;
         }
         h1, h2, h3, h4, h5, h6, .playfair {
             font-family: 'Playfair Display', serif;
         }
         .dashboard-container {
             display: flex;
-            min-height: 100vh;
+            height: 100vh;
+            width: 100%;
         }
         .main-content {
             flex-grow: 1;
-            padding: 25px;
+            padding: 0 25px 25px 25px;
             overflow-y: auto;
+            height: 100vh;
             background-color: #f4f7f6;
+            scroll-behavior: smooth;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px);
+            margin-top: 10px;
         }
         .card {
             border: none;
@@ -69,7 +83,7 @@ if (session_status() === PHP_SESSION_NONE) {
     
     <div class="main-content w-100">
         <!-- Barre supérieure -->
-        <header class="d-flex justify-content-between align-items-center py-3 mb-4 border-bottom bg-white px-4 rounded-4 shadow-sm">
+        <header class="d-flex justify-content-between align-items-center py-3 mb-4 border-bottom px-4 rounded-4 shadow-sm sticky-header">
             <h4 class="mb-0 text-dark playfair fw-bold">
                 <?php
                 if($_SESSION['user_role'] === 'admin') echo "Espace Administrateur";
