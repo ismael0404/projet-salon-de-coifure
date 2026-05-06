@@ -81,14 +81,14 @@ try {
                         </a>
                         <ul class="dropdown-menu">
                             <?php if($_SESSION['user_role'] == 'client'): ?>
-                                <li><a class="dropdown-item" href="pages/client/dashboard_client.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
+                                <li><a class="dropdown-item" href="pages/client/dashboard.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
                             <?php elseif($_SESSION['user_role'] == 'employe'): ?>
-                                <li><a class="dropdown-item" href="pages/employe/dashboard_employe.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
+                                <li><a class="dropdown-item" href="pages/employe/dashboard.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
                             <?php elseif($_SESSION['user_role'] == 'admin'): ?>
-                                <li><a class="dropdown-item" href="pages/admin/dashboard_admin.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
+                                <li><a class="dropdown-item" href="pages/admin/dashboard.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
                             <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="php/auth/deconnexion.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                            <li><a class="dropdown-item" href="php/controllers/auth_controller.php?action=logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
                         </ul>
                     </li>
                 <?php else: ?>

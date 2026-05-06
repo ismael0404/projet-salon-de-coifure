@@ -38,15 +38,28 @@ h1, h2, h3, h4, h5, h6 {
     padding: 20px 0;
 }
 
-#mainNav.scrolled {
-    background: rgba(255, 255, 255, 0.98);
-    box-shadow: var(--shadow);
-    padding: 12px 0;
+#mainNav.scrolled,
+#mainNav.navbar-solid {
+    background: white !important;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1) !important;
+    padding: 10px 0 !important;
 }
 
 #mainNav.scrolled .navbar-brand,
-#mainNav.scrolled .nav-link {
-    color: var(--text-dark);
+#mainNav.navbar-solid .navbar-brand,
+#mainNav.scrolled .navbar-brand span,
+#mainNav.navbar-solid .navbar-brand span {
+    color: #d4a373 !important; /* Couleur dorée primary */
+}
+
+#mainNav.scrolled .nav-link,
+#mainNav.navbar-solid .nav-link {
+    color: #2d3436 !important; /* Couleur sombre */
+}
+
+#mainNav.scrolled .nav-link:hover,
+#mainNav.navbar-solid .nav-link:hover {
+    color: #d4a373 !important;
 }
 
 .navbar-brand {
@@ -377,11 +390,12 @@ h1, h2, h3, h4, h5, h6 {
     }
     
     #mainNav {
-        background: rgba(255,255,255,0.98);
+        background: rgba(255,255,255,0.98) !important;
         padding: 12px 0;
+        box-shadow: var(--shadow);
     }
     
-    .navbar-brand, .nav-link {
+    .navbar-brand, .navbar-brand span, .nav-link {
         color: var(--text-dark) !important;
     }
     

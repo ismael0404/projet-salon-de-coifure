@@ -95,7 +95,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
             <li><a class="dropdown-item" href="/coiffure_salon/index.php">Retour au site</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/coiffure_salon/php/auth/deconnexion.php">Déconnexion</a></li>
+            <li><a class="dropdown-item" href="/coiffure_salon/php/controllers/auth_controller.php?action=logout">Déconnexion</a></li>
         </ul>
     </div>
 </div>

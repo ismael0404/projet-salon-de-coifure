@@ -25,7 +25,7 @@ if(is_logged_in()) {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css?v=1.1">
     
     <style>
         /* Styles spécifiques pour la page de connexion */
@@ -204,7 +204,7 @@ if(is_logged_in()) {
 <body>
 
 <!-- ========== NAVIGATION BAR ========== -->
-<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+<nav class="navbar navbar-expand-lg fixed-top navbar-solid" id="mainNav">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="../index.php">
             <img src="../assets/images/ty.jpg" alt="Logo TYA STYLEX" class="navbar-logo" onerror="this.src='https://via.placeholder.com/45x45?text=TYA'">
