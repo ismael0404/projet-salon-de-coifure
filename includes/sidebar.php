@@ -41,6 +41,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <i class="fas fa-cut me-2"></i> Prestations
                 </a>
             </li>
+            <li>
+                <a href="/coiffure_salon/pages/messages.php" class="nav-link text-white <?php echo $current_page === 'messages.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-envelope me-2"></i> Messagerie
+                </a>
+            </li>
             
         <?php elseif ($role === 'employe'): ?>
             <li class="nav-item">
@@ -56,6 +61,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li>
                 <a href="/coiffure_salon/pages/employe/profil.php" class="nav-link text-white <?php echo $current_page === 'profil.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user me-2"></i> Mon Profil
+                </a>
+            </li>
+            <li>
+                <a href="/coiffure_salon/pages/messages.php" class="nav-link text-white <?php echo $current_page === 'messages.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-envelope me-2"></i> Messagerie
                 </a>
             </li>
             
@@ -78,6 +88,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li>
                 <a href="/coiffure_salon/pages/client/profil.php" class="nav-link text-white <?php echo $current_page === 'profil.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user me-2"></i> Mon Profil
+                </a>
+            </li>
+            <li>
+                <a href="/coiffure_salon/pages/messages.php" class="nav-link text-white <?php echo $current_page === 'messages.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-envelope me-2"></i> Messagerie
                 </a>
             </li>
         <?php endif; ?>

@@ -37,6 +37,32 @@ try {
     $stmt->execute(['id' => $id_employe]);
     $planning = $stmt->fetchAll();
 
+    // 4. Données pour le graphique (7 derniers jours)
+    $days = [];
+    $rdv_counts = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $d = date('Y-m-d', strtotime("-$i days"));
+        $label = date('D', strtotime("-$i days"));
+        $days[] = $label;
+        
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM rendez_vous WHERE id_employe = :id AND date_rdv = :date AND statut != 'annule'");
+        $stmt->execute(['id' => $id_employe, 'date' => $d]);
+        $rdv_counts[] = $stmt->fetchColumn();
+    }
+
+    // 5. Derniers avis clients
+    $stmt = $pdo->prepare("
+        SELECT a.*, u.nom, u.prenom, u.avatar
+        FROM avis a
+        JOIN rendez_vous r ON a.id_rdv = r.id_rdv
+        JOIN clientes c ON a.id_cliente = c.id_cliente
+        JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+        WHERE r.id_employe = :id
+        ORDER BY a.date_avis DESC LIMIT 3
+    ");
+    $stmt->execute(['id' => $id_employe]);
+    $avis_recents = $stmt->fetchAll();
+
 } catch(PDOException $e) {
     die("Erreur de chargement du dashboard");
 }
@@ -146,27 +172,77 @@ include dirname(__DIR__, 2) . '/includes/header.php';
 
         <!-- Rappels / Notes -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: linear-gradient(135deg, #d4a373, #b88352); color: white;">
-                <h5 class="playfair fw-bold mb-3 text-white">Conseil du Jour</h5>
-                <p class="small mb-0 opacity-90">
-                    "La ponctualité est la politesse des rois. Un client accueilli avec le sourire et à l'heure est un client qui revient."
-                </p>
-                <div class="text-end mt-3">
-                    <i class="fas fa-quote-right fa-2x opacity-25"></i>
+            <!-- Activité Hebdomadaire -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h5 class="playfair fw-bold mb-3">Mon Activité (7j)</h5>
+                <div style="height: 180px;">
+                    <canvas id="activityChart"></canvas>
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-                <h5 class="playfair fw-bold mb-3">Mes Prochaines Semaines</h5>
-                <div class="text-center py-4">
-                    <i class="fas fa-calendar-alt fa-3x mb-3 text-muted opacity-25"></i>
-                    <p class="small text-muted">Votre agenda est rempli à 60% pour la semaine prochaine.</p>
-                    <a href="rendezvous.php" class="btn btn-sm btn-outline-primary rounded-pill px-4">Voir tout</a>
+            <!-- Derniers Avis -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h5 class="playfair fw-bold mb-3">Avis Clients</h5>
+                <?php if(empty($avis_recents)): ?>
+                    <div class="text-center py-3">
+                        <small class="text-muted italic">Aucun avis récent.</small>
+                    </div>
+                <?php else: ?>
+                    <?php foreach($avis_recents as $avis): ?>
+                        <div class="d-flex mb-3 border-bottom pb-2">
+                            <img src="<?php echo $avis['avatar'] ?: 'https://ui-avatars.com/api/?name='.urlencode($avis['prenom']); ?>" class="rounded-circle me-2" width="30" height="30">
+                            <div>
+                                <div class="small fw-bold"><?php echo htmlspecialchars($avis['prenom']); ?></div>
+                                <div class="text-warning small">
+                                    <?php for($i=0; $i<$avis['note']; $i++) echo '<i class="fas fa-star" style="font-size: 0.6rem;"></i>'; ?>
+                                </div>
+                                <div class="small text-muted" style="font-size: 0.75rem;"><?php echo htmlspecialchars(substr($avis['commentaire'], 0, 50)); ?>...</div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                <div class="text-center mt-2">
+                    <button class="btn btn-sm btn-link text-primary text-decoration-none small">Voir tous mes avis</button>
                 </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: linear-gradient(135deg, #d4a373, #b88352); color: white;">
+                <h5 class="playfair fw-bold mb-3 text-white">Messagerie Rapide</h5>
+                <p class="small mb-3 opacity-90">Un message à l'admin ou à une cliente ?</p>
+                <a href="/coiffure_salon/pages/messages.php" class="btn btn-white btn-sm rounded-pill w-100 text-primary fw-bold">Ouvrir la messagerie</a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($days); ?>,
+            datasets: [{
+                label: 'RDV',
+                data: <?php echo json_encode($rdv_counts); ?>,
+                backgroundColor: 'rgba(212, 163, 115, 0.7)',
+                borderColor: '#d4a373',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+});
+</script>
 
 <style>
 .time-box {

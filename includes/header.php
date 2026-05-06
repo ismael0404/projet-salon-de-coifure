@@ -92,6 +92,22 @@ if (session_status() === PHP_SESSION_NONE) {
                 ?>
             </h4>
             <div class="d-flex align-items-center">
+                <!-- Messagerie Dropdown -->
+                <div class="me-3">
+                    <a href="/coiffure_salon/pages/messages.php" class="btn btn-link text-dark position-relative p-0">
+                        <i class="fas fa-envelope fa-lg text-primary"></i>
+                        <?php
+                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE id_destinataire = ? AND lu = 0");
+                        $stmt->execute([$_SESSION['user_id']]);
+                        $unread_msg = $stmt->fetchColumn();
+                        if ($unread_msg > 0): ?>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                <?php echo $unread_msg; ?>
+                            </span>
+                        <?php endif; ?>
+                    </a>
+                </div>
+
                 <!-- Notifications Dropdown -->
                 <div class="dropdown me-3">
                     <button class="btn btn-link text-dark position-relative p-0" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -197,6 +213,29 @@ if (session_status() === PHP_SESSION_NONE) {
                         title: 'Erreur',
                         text: '<?php echo addslashes($flash_error); ?>',
                         confirmButtonColor: '#d4a373'
+                    });
+                });
+            </script>
+        <?php endif; ?>
+
+        <?php
+        // Notification pour les nouveaux messages non lus lors de la connexion
+        if (isset($unread_msg) && $unread_msg > 0 && !isset($_SESSION['msg_notified'])): 
+            $_SESSION['msg_notified'] = true;
+        ?>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+
+                    Toast.fire({
+                        icon: 'info',
+                        title: 'Vous avez <?php echo $unread_msg; ?> message(s) non lu(s)'
                     });
                 });
             </script>
