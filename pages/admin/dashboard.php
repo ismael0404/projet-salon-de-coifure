@@ -123,7 +123,9 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                         <option>Cette année</option>
                     </select>
                 </div>
-                <canvas id="mainChart" height="250"></canvas>
+                <div class="chart-container" style="position: relative; height: 350px;">
+                    <canvas id="mainChart"></canvas>
+                </div>
             </div>
         </div>
         
@@ -131,7 +133,9 @@ include dirname(__DIR__, 2) . '/includes/header.php';
         <div class="col-lg-4">
             <div class="card p-4 h-100 border-0 shadow-sm">
                 <h5 class="card-title playfair fw-bold mb-4">Popularité des Services</h5>
-                <canvas id="serviceChart" height="250"></canvas>
+                <div class="chart-container" style="position: relative; height: 250px;">
+                    <canvas id="serviceChart"></canvas>
+                </div>
                 <div class="mt-4">
                     <?php 
                     $colors = ['#d4a373', '#2c3e50', '#27ae60', '#2980b9', '#e67e22'];
