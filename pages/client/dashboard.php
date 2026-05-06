@@ -141,6 +141,9 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                                     <i class="fas <?php echo $prochain_rdv['statut'] == 'confirme' ? 'fa-check-circle' : 'fa-hourglass-start'; ?> me-1"></i>
                                     <?php echo ucfirst($prochain_rdv['statut']); ?>
                                 </span>
+                                <?php if($prochain_rdv['statut'] == 'confirme'): ?>
+                                    <a href="facture.php?id=<?php echo $prochain_rdv['id_rdv']; ?>" target="_blank" class="btn btn-outline-light btn-sm px-3"><i class="fas fa-file-pdf me-1"></i> Reçu</a>
+                                <?php endif; ?>
                                 <button class="btn btn-outline-light btn-sm px-3" onclick="gererRDV(<?php echo $prochain_rdv['id_rdv']; ?>, '<?php echo $prochain_rdv['date_rdv']; ?>', '<?php echo $prochain_rdv['heure_rdv']; ?>')">Gérer</button>
                             </div>
                         </div>

@@ -160,13 +160,14 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                                 <th>Cliente</th>
                                 <th>Service</th>
                                 <th>Date</th>
+                                <th>Reçu</th>
                                 <th>Statut</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             try {
-                                $stmt = $pdo->query("SELECT r.id_rdv, r.date_rdv, r.statut, u.nom, u.prenom, s.nom_service 
+                                $stmt = $pdo->query("SELECT r.id_rdv, r.date_rdv, r.statut, r.recu_telecharge, u.nom, u.prenom, s.nom_service 
                                                      FROM rendez_vous r 
                                                      JOIN clientes c ON r.id_cliente = c.id_cliente 
                                                      JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur 
@@ -182,6 +183,13 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                                     echo '<td><div class="fw-bold">' . htmlspecialchars($row['prenom']) . '</div></td>';
                                     echo '<td>' . htmlspecialchars($row['nom_service']) . '</td>';
                                     echo '<td>' . date('d/m', strtotime($row['date_rdv'])) . '</td>';
+                                    echo '<td>';
+                                    if ($row['recu_telecharge']) {
+                                        echo '<span class="text-success" title="Téléchargé"><i class="fas fa-file-download"></i></span>';
+                                    } else {
+                                        echo '<span class="text-muted" title="Non téléchargé"><i class="fas fa-file"></i></span>';
+                                    }
+                                    echo '</td>';
                                     echo '<td><span class="badge ' . $status_class . '">' . ucfirst($row['statut']) . '</span></td>';
                                     echo '</tr>';
                                 }

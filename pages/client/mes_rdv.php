@@ -95,10 +95,15 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                             </td>
                             <td><span class="badge <?php echo $badge_class; ?>"><?php echo ucfirst($rdv['statut']); ?></span></td>
                             <td>
-                                <?php if($rdv['statut'] == 'termine'): ?>
-                                    <button class="btn btn-sm btn-outline-warning" title="Laisser un avis" onclick="Swal.fire('Info', 'Système d\'avis en cours de développement', 'info')"><i class="fas fa-star"></i></button>
-                                    <a href="facture.php?id=<?php echo $rdv['id_rdv']; ?>" target="_blank" class="btn btn-sm btn-outline-danger" title="Télécharger la facture"><i class="fas fa-file-pdf"></i></a>
-                                <?php elseif($rdv['statut'] == 'en_attente' || $rdv['statut'] == 'confirme'): ?>
+                                <?php if($rdv['statut'] == 'termine' || $rdv['statut'] == 'confirme'): ?>
+                                    <?php if($rdv['statut'] == 'termine'): ?>
+                                        <button class="btn btn-sm btn-outline-warning" title="Laisser un avis" onclick="Swal.fire('Info', 'Système d\'avis en cours de développement', 'info')"><i class="fas fa-star"></i></button>
+                                    <?php endif; ?>
+                                    <a href="facture.php?id=<?php echo $rdv['id_rdv']; ?>" target="_blank" class="btn btn-sm btn-outline-danger" title="Télécharger le reçu"><i class="fas fa-file-pdf"></i></a>
+                                    <?php if($rdv['statut'] == 'confirme'): ?>
+                                        <button class="btn btn-sm btn-outline-primary" title="Modifier le RDV" onclick="modifierRDV(<?php echo $rdv['id_rdv']; ?>, '<?php echo $rdv['date_rdv']; ?>', '<?php echo $rdv['heure_rdv']; ?>')"><i class="fas fa-edit"></i></button>
+                                    <?php endif; ?>
+                                <?php elseif($rdv['statut'] == 'en_attente'): ?>
                                     <button class="btn btn-sm btn-outline-primary" title="Modifier le RDV" onclick="modifierRDV(<?php echo $rdv['id_rdv']; ?>, '<?php echo $rdv['date_rdv']; ?>', '<?php echo $rdv['heure_rdv']; ?>')"><i class="fas fa-edit"></i></button>
                                     <button class="btn btn-sm btn-outline-danger" title="Annuler le RDV" onclick="annulerRDV(<?php echo $rdv['id_rdv']; ?>)"><i class="fas fa-times"></i></button>
                                 <?php else: ?>

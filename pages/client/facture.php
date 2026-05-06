@@ -14,7 +14,7 @@ $user_id = $_SESSION['user_id'];
 // Récupérer les informations complètes de la facture
 try {
     $stmt = $pdo->prepare("
-        SELECT r.id_rdv, r.date_rdv, r.heure_rdv, r.prix_total, r.reduction_appliquee, r.statut,
+        SELECT r.id_rdv, r.date_rdv, r.heure_rdv, r.prix_total, r.reduction_appliquee, r.statut, r.recu_telecharge,
                s.nom_service, s.prix_standard,
                e_u.prenom as emp_prenom,
                c_u.nom as client_nom, c_u.prenom as client_prenom, c_u.email, c_u.telephone, c_u.adresse
@@ -24,15 +24,31 @@ try {
         JOIN services s ON r.id_service = s.id_service 
         JOIN employes e ON r.id_employe = e.id_employe
         JOIN utilisateurs e_u ON e.id_utilisateur = e_u.id_utilisateur
-        WHERE r.id_rdv = :id_rdv AND c_u.id_utilisateur = :id_user AND r.statut = 'termine'
+        WHERE r.id_rdv = :id_rdv AND c_u.id_utilisateur = :id_user AND r.statut IN ('confirme', 'termine')
     ");
     $stmt->execute(['id_rdv' => $id_rdv, 'id_user' => $user_id]);
     $facture = $stmt->fetch();
     
     if (!$facture) {
-        $_SESSION['flash_error'] = "Facture introuvable ou rendez-vous non terminé.";
+        $_SESSION['flash_error'] = "Facture introuvable ou rendez-vous non confirmé.";
         redirect('mes_rdv.php');
     }
+
+    // Marquer comme téléchargé/vu si c'est la première fois
+    if ($facture['recu_telecharge'] == 0) {
+        $pdo->prepare("UPDATE rendez_vous SET recu_telecharge = 1 WHERE id_rdv = ?")->execute([$id_rdv]);
+        
+        $client_name = $facture['client_prenom'] . ' ' . $facture['client_nom'];
+        $stmt_admin = $pdo->query("SELECT id_utilisateur FROM utilisateurs WHERE role = 'admin' LIMIT 1");
+        $admin_id = $stmt_admin->fetchColumn();
+        if ($admin_id) {
+            create_notification($admin_id, "Le client $client_name a téléchargé son reçu pour le RDV #$id_rdv", 'info');
+        }
+    }
+
+    // Récupérer les paramètres du site pour les afficher sur la facture
+    $stmt_settings = $pdo->query("SELECT cle, valeur FROM parametres_site");
+    $site_settings = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
 } catch(PDOException $e) {
     redirect('mes_rdv.php');
 }
@@ -71,13 +87,13 @@ try {
 <div class="facture-container" id="factureContent">
     <div class="row border-bottom border-custom pb-3 mb-4">
         <div class="col-6">
-            <h1 class="playfair text-primary-custom fw-bold">TYA STYLEX</h1>
-            <p class="mb-0 text-muted">Salon de coiffure féminin premium</p>
-            <p class="mb-0 text-muted">123 Avenue de l'Élégance, Paris</p>
-            <p class="text-muted">contact@tyastylex.com | +33 1 23 45 67 89</p>
+            <h1 class="playfair text-primary-custom fw-bold"><?php echo htmlspecialchars($site_settings['site_nom'] ?? 'TYA STYLEX'); ?></h1>
+            <p class="mb-0 text-muted"><?php echo htmlspecialchars($site_settings['site_description'] ?? ''); ?></p>
+            <p class="mb-0 text-muted"><?php echo htmlspecialchars($site_settings['site_adresse'] ?? ''); ?></p>
+            <p class="text-muted"><?php echo htmlspecialchars($site_settings['site_email'] ?? ''); ?> | <?php echo htmlspecialchars($site_settings['site_telephone'] ?? ''); ?></p>
         </div>
         <div class="col-6 text-end">
-            <h2 class="text-muted">FACTURE</h2>
+            <h2 class="text-muted"><?php echo $facture['statut'] == 'termine' ? 'FACTURE' : 'REÇU'; ?></h2>
             <p class="fw-bold mb-0">N° F-<?php echo date('Y', strtotime($facture['date_rdv'])) . '-' . str_pad($facture['id_rdv'], 4, '0', STR_PAD_LEFT); ?></p>
             <p class="mb-0">Date : <?php echo date('d/m/Y', strtotime($facture['date_rdv'])); ?></p>
         </div>
@@ -129,10 +145,15 @@ try {
                 </tr>
                 <?php endif; ?>
                 <tr class="border-top border-custom border-2">
-                    <td class="fw-bold fs-5">TOTAL PAYÉ :</td>
+                    <td class="fw-bold fs-5"><?php echo $facture['statut'] == 'termine' ? 'TOTAL PAYÉ :' : 'TOTAL À RÉGLER :'; ?></td>
                     <td class="text-end fw-bold fs-5 text-primary-custom"><?php echo format_price($facture['prix_total']); ?></td>
                 </tr>
             </table>
+            <div class="text-end mt-2">
+                <span class="badge bg-light text-dark border p-2">
+                    <i class="fas fa-hand-holding-usd me-1"></i> PAIEMENT SUR PLACE
+                </span>
+            </div>
         </div>
     </div>
     
@@ -147,7 +168,7 @@ function downloadPDF() {
     const element = document.getElementById('factureContent');
     const opt = {
         margin:       10,
-        filename:     'Facture_TyaStylex_<?php echo $facture['id_rdv']; ?>.pdf',
+        filename:     'Recu_TyaStylex_<?php echo $facture['id_rdv']; ?>.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }

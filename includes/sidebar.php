@@ -18,7 +18,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <?php if ($role === 'admin'): ?>
             <li class="nav-item">
                 <a href="/coiffure_salon/pages/admin/dashboard.php" class="nav-link text-white <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                    <i class="fas fa-th-large me-2"></i> Tableau de bord
+                </a>
+            </li>
+            <li>
+                <a href="/coiffure_salon/pages/admin/profil.php" class="nav-link text-white <?php echo $current_page === 'profil.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-user-shield me-2"></i> Mon Profil / Paramètres
                 </a>
             </li>
             <li>
